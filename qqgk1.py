@@ -165,13 +165,14 @@ color_list = [
     "lavender", "peachpuff", "palegoldenrod"
 ]
 
-# 生成随机窗口位置
+# 生成随机窗口位置 - 往左移动
 def generate_random_position():
     screen_width = 1600
     screen_height = 1000
     window_width = 350
     window_height = 120
-    left = random.randint(0, screen_width - window_width)
+    # 往左移动：从-100开始，消除左边留白
+    left = random.randint(-100, screen_width - window_width - 50)
     top = random.randint(0, screen_height - window_height)
     return left, top
 
@@ -228,9 +229,9 @@ def main():
             )
             st.session_state.initial_closed = False
             
-            # 生成弹窗数据 - 增加到500个
+            # 生成弹窗数据 - 500个
             st.session_state.windows = []
-            for i in range(500):  # 改为500个
+            for i in range(500):
                 left, top = generate_random_position()
                 color = random.choice(color_list)
                 tip = random.choice(tips_list)
