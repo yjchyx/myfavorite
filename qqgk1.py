@@ -40,7 +40,7 @@ st.markdown("""
         margin: 0px;
         opacity: 0;
         transform: scale(0.9);
-        animation: windowPop 0.5s ease-out forwards;
+        animation: windowPop 0.7s ease-out forwards; /* 固定0.7秒动画 */
         cursor: default;
         width: 350px;
         height: 120px;
@@ -77,7 +77,7 @@ st.markdown("""
         font-family: "微软雅黑", sans-serif;
     }
     
-    /* 初始窗口特殊样式 - 可点击 */
+    /* 初始窗口样式 */
     .initial-window {
         position: fixed;
         top: 50%;
@@ -98,16 +98,11 @@ st.markdown("""
         text-align: center;
         font-family: "华文行楷", sans-serif;
         font-size: 18px;
-        cursor: pointer;
-        transition: all 0.3s ease;
+        width: 350px;
+        height: 120px;
     }
     
-    .initial-window:hover {
-        transform: translate(-50%, -50%) scale(1.05);
-        box-shadow: 5px 5px 15px rgba(0,0,0,0.4);
-    }
-    
-    /* 弹窗出现动画 */
+    /* 弹窗出现动画 - 固定0.7秒 */
     @keyframes windowPop {
         0% {
             opacity: 0;
@@ -128,7 +123,7 @@ st.markdown("""
     }
     
     .initial-close {
-        animation: initialClose 0.5s ease-out forwards;
+        animation: initialClose 0.7s ease-out forwards; /* 0.7秒关闭动画 */
     }
     
     /* 控制面板 */
@@ -153,8 +148,8 @@ if 'app_state' not in st.session_state:
     st.session_state.app_state = "initial"  # initial, creating, batch, closed
 if 'windows' not in st.session_state:
     st.session_state.windows = []
-if 'initial_clicked' not in st.session_state:
-    st.session_state.initial_clicked = False
+if 'initial_closed' not in st.session_state:
+    st.session_state.initial_closed = False
 
 # 你指定的8条语录
 tips_list = [
@@ -174,11 +169,11 @@ color_list = [
     "lavender", "peachpuff", "palegoldenrod"
 ]
 
-# 生成随机窗口位置（考虑大尺寸窗口）
+# 生成随机窗口位置
 def generate_random_position():
-    screen_width = 1600  # 增加屏幕宽度适应大窗口
-    screen_height = 1000  # 增加屏幕高度
-    window_width = 350   # 保持原始尺寸
+    screen_width = 1600
+    screen_height = 1000
+    window_width = 350
     window_height = 120
     
     left = random.randint(0, screen_width - window_width)
@@ -194,13 +189,12 @@ def create_window_html(window_id, left, top, title, content, bg_color, is_initia
             <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; flex-direction: column;">
                 <div style="font-size: 20px; font-weight: bold;">全球高考</div>
                 <div style="font-size: 16px;">by 木苏里</div>
-                <div style="font-size: 12px; margin-top: 10px; color: #666;">点击我开始500个弹窗</div>
             </div>
         </div>
         """
     else:
-        # 为批量弹窗添加随机延迟
-        animation_delay = random.uniform(0, 2)  # 随机延迟0-2秒
+        # 固定0.7秒延迟，按顺序出现
+        animation_delay = window_id * 0.7  # 每个弹窗间隔0.7秒
         return f"""
         <div class="tk-window" style="left: {left}px; top: {top}px; background-color: {bg_color}; animation-delay: {animation_delay}s;">
             <div class="window-title">{title}</div>
@@ -225,42 +219,42 @@ def main():
             """
             <div class="control-panel">
                 <h4 style="margin:0; color:#333;">全球高考 · 500弹窗效果</h4>
-                <p style="margin:5px 0; color:#666; font-size:14px;">点击中央卡片开始500个弹窗效果</p>
-                <p style="margin:0; color:#888; font-size:12px;">使用8条指定语录 · 350×120原始尺寸</p>
+                <p style="margin:5px 0; color:#666; font-size:14px;">点击下方按钮开始弹窗效果</p>
+                <p style="margin:0; color:#888; font-size:12px;">每个弹窗出现间隔0.7秒</p>
             </div>
             """,
             unsafe_allow_html=True
         )
         
-        # 使用透明按钮覆盖在卡片上（实现点击效果）
-        col1, col2, col3 = st.columns([2, 1, 2])
+        # 开始按钮
+        col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
-            if st.button("点击卡片开始", key="hidden_click", help="点击初始卡片"):
+            if st.button("点击开始", key="start_button", use_container_width=True, type="primary"):
                 st.session_state.app_state = "creating"
-                st.session_state.initial_clicked = True
+                st.session_state.initial_closed = True
                 st.rerun()
     
     # 创建弹窗中
     elif st.session_state.app_state == "creating":
         # 初始窗口关闭效果
-        if st.session_state.initial_clicked:
+        if st.session_state.initial_closed:
             st.markdown(
                 '<div class="initial-window initial-close"></div>',
                 unsafe_allow_html=True
             )
-            st.session_state.initial_clicked = False
+            st.session_state.initial_closed = False
             
             # 生成500个弹窗数据
-            st.info("🎯 正在生成500个弹窗，请稍候...")
+            st.info("🎯 正在准备500个弹窗...")
             
             # 清空之前的窗口数据
             st.session_state.windows = []
             
-            # 创建500个弹窗（使用指定的8条语录）
+            # 创建500个弹窗
             for i in range(500):
                 left, top = generate_random_position()
-                color = random.choice(color_list)  # 随机选择颜色
-                tip = random.choice(tips_list)     # 从指定8条语录中随机选择
+                color = random.choice(color_list)
+                tip = random.choice(tips_list)
                 
                 st.session_state.windows.append({
                     'id': i,
@@ -270,8 +264,8 @@ def main():
                     'tip': tip
                 })
             
-            # 短暂延迟后切换到批量显示
-            time.sleep(0.5)
+            # 切换到批量显示
+            time.sleep(0.7)  # 等待初始窗口关闭动画完成
             st.session_state.app_state = "batch"
             st.rerun()
     
@@ -295,9 +289,9 @@ def main():
         st.markdown(
             f"""
             <div class="control-panel">
-                <h4 style="margin:0; color:#333;">🎉 500个弹窗创建完成！</h4>
-                <p style="margin:5px 0; color:#666; font-size:14px;">共创建了 {len(st.session_state.windows)} 个弹窗</p>
-                <p style="margin:0; color:#888; font-size:12px;">使用8条指定语录 · 语录会重复出现</p>
+                <h4 style="margin:0; color:#333;">🎉 500个弹窗正在依次出现</h4>
+                <p style="margin:5px 0; color:#666; font-size:14px;">每个弹窗间隔0.7秒，请耐心观看</p>
+                <p style="margin:0; color:#888; font-size:12px;">已创建 {len(st.session_state.windows)} 个弹窗</p>
             </div>
             """,
             unsafe_allow_html=True
@@ -313,18 +307,18 @@ def main():
             if st.button("重新开始", use_container_width=True):
                 st.session_state.app_state = "initial"
                 st.session_state.windows = []
-                st.session_state.initial_clicked = False
+                st.session_state.initial_closed = False
                 st.rerun()
     
     # 关闭状态
     elif st.session_state.app_state == "closed":
         st.balloons()
-        st.success("🎊 所有500个弹窗已关闭！")
+        st.success("🎊 所有弹窗已关闭！")
         
         if st.button("重新开始体验", use_container_width=True, type="primary"):
             st.session_state.app_state = "initial"
             st.session_state.windows = []
-            st.session_state.initial_clicked = False
+            st.session_state.initial_closed = False
             st.rerun()
 
 if __name__ == "__main__":
