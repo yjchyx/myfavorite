@@ -165,7 +165,7 @@ color_list = [
     "lavender", "peachpuff", "palegoldenrod"
 ]
 
-# 生成随机窗口位置 - 往左移动
+# 生成随机窗口位置 - 往左和往上移动
 def generate_random_position():
     screen_width = 1600
     screen_height = 1000
@@ -173,7 +173,8 @@ def generate_random_position():
     window_height = 120
     # 往左移动：从-100开始，消除左边留白
     left = random.randint(-100, screen_width - window_width - 50)
-    top = random.randint(0, screen_height - window_height)
+    # 往上移动：从-80开始，消除上边留白
+    top = random.randint(-80, screen_height - window_height - 50)
     return left, top
 
 # 创建弹窗HTML
