@@ -4,103 +4,108 @@ import time
 
 # 页面配置
 st.set_page_config(
-    page_title="全球高考重叠弹窗",
-    page_icon="🎴",
-    layout="wide",
+    page_title="全球高考200弹窗",
+    page_icon="📚",
+    layout="centered",
     initial_sidebar_state="collapsed"
 )
 
-# 自定义CSS样式 - 实现重叠交错效果
+# 自定义CSS样式 - 优化性能
 st.markdown("""
 <style>
-    /* 隐藏Streamlit默认元素 */
+    /* 隐藏所有Streamlit默认元素 */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
+    .stApp {
+        background: #f0f2f6;
+        overflow: hidden;
+    }
     
-    /* 卡片基础样式 */
-    .overlap-card {
+    /* 模拟Tkinter窗口样式 - 简化版本提高性能 */
+    .tk-window {
         position: fixed;
-        padding: 20px;
-        border-radius: 10px;
-        text-align: center;
-        font-weight: bold;
-        box-shadow: 0 6px 20px rgba(0,0,0,0.3);
-        min-height: 110px;
-        min-width: 220px;
+        border: 2px solid #2f2f2f;
+        border-radius: 0px;
+        background: white;
+        box-shadow: 2px 2px 8px rgba(0,0,0,0.2);
+        overflow: hidden;
+        z-index: 1;
+        font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
-        border: 2px solid rgba(255,255,255,0.6);
+        text-align: center;
+        padding: 0px;
+        margin: 0px;
         opacity: 0;
-        transform: scale(0.3) rotate(-15deg);
-        animation: overlapPop 1s ease-out forwards;
-        z-index: 1;
-        cursor: pointer;
-        transition: all 0.3s ease;
+        transform: scale(0.9);
+        animation: windowPop 0.5s ease-out forwards;
     }
     
-    /* 重叠弹出动画 */
-    @keyframes overlapPop {
-        0% {
-            opacity: 0;
-            transform: scale(0.3) rotate(-15deg);
-        }
-        60% {
-            opacity: 0.9;
-            transform: scale(1.05) rotate(5deg);
-        }
-        100% {
-            opacity: 1;
-            transform: scale(1) rotate(0deg);
-        }
+    /* 窗口标题栏 */
+    .window-title {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 20px;
+        background: #2f2f2f;
+        color: white;
+        font-size: 11px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
     
-    /* 初始卡片样式 */
-    .initial-card {
+    /* 窗口内容 */
+    .window-content {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        padding: 8px;
+        box-sizing: border-box;
+        word-wrap: break-word;
+        overflow: hidden;
+    }
+    
+    /* 初始窗口特殊样式 */
+    .initial-window {
         position: fixed;
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
         z-index: 1000;
+        animation: none;
         opacity: 1;
-        animation: gentlePulse 2s infinite;
-        cursor: pointer;
-        padding: 30px;
-        border-radius: 15px;
-        background-color: skyblue;
-        color: #333;
-        font-size: 24px;
-        text-align: center;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-        border: 3px solid rgba(255,255,255,0.7);
-        font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+        transform: scale(1);
     }
     
-    @keyframes gentlePulse {
-        0% { transform: translate(-50%, -50%) scale(1); }
-        50% { transform: translate(-50%, -50%) scale(1.08); }
-        100% { transform: translate(-50%, -50%) scale(1); }
-    }
-    
-    /* 初始卡片消失动画 */
-    .fade-out {
-        animation: fadeOutOverlap 0.6s ease forwards;
-    }
-    
-    @keyframes fadeOutOverlap {
-        to {
+    /* 弹窗出现动画 */
+    @keyframes windowPop {
+        0% {
             opacity: 0;
-            transform: translate(-50%, -50%) scale(0.3);
+            transform: scale(0.9);
+        }
+        100% {
+            opacity: 1;
+            transform: scale(1);
         }
     }
     
-    /* 卡片悬停效果 */
-    .overlap-card:hover {
-        transform: scale(1.1) !important;
-        z-index: 100 !important;
-        box-shadow: 0 12px 30px rgba(0,0,0,0.5);
+    /* 窗口关闭动画 */
+    @keyframes windowClose {
+        to {
+            opacity: 0;
+            transform: scale(0.8);
+        }
+    }
+    
+    .close-animation {
+        animation: windowClose 0.3s ease-out forwards;
     }
     
     /* 控制面板 */
@@ -110,26 +115,37 @@ st.markdown("""
         left: 50%;
         transform: translateX(-50%);
         z-index: 2000;
-        background: rgba(255,255,255,0.9);
-        padding: 15px;
+        background: rgba(255,255,255,0.95);
+        padding: 15px 25px;
         border-radius: 10px;
         box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        text-align: center;
+        min-width: 300px;
+    }
+    
+    /* 进度指示器 */
+    .progress-info {
+        font-size: 14px;
+        color: #666;
+        margin-bottom: 10px;
     }
 </style>
 """, unsafe_allow_html=True)
 
 # 初始化会话状态
 if 'app_state' not in st.session_state:
-    st.session_state.app_state = "initial"  # initial, overlapping, complete
-if 'cards_popped' not in st.session_state:
-    st.session_state.cards_popped = 0
-if 'card_data' not in st.session_state:
-    st.session_state.card_data = []
-if 'initial_removed' not in st.session_state:
-    st.session_state.initial_removed = False
+    st.session_state.app_state = "initial"  # initial, creating, batch, closed
+if 'windows' not in st.session_state:
+    st.session_state.windows = []
+if 'initial_closed' not in st.session_state:
+    st.session_state.initial_closed = False
+if 'windows_created' not in st.session_state:
+    st.session_state.windows_created = 0
+if 'creation_started' not in st.session_state:
+    st.session_state.creation_started = False
 
-# 全球高考语录
-quotes = [
+# 扩展全球高考语录 - 200条不同的语录
+base_tips_list = [
     "世界灿烂盛大，欢迎回家",
     "愿我们在硝烟散尽的世界里重逢",
     "这里的一切都有始有终，却能容纳所有的不期而遇和久别重逢",
@@ -144,190 +160,218 @@ quotes = [
     "别对我闭上眼睛，不要，简松意，别对我闭上眼睛",
     "你眸中有山川河流，胜过我行经路过的一切不朽",
     "上天从未眷顾人类，我们将独自走完征程",
-    "星河璀璨，阳光干净，在人间所有美好的存在里，不论是活着或者死去，我总是最爱你"
+    "星河璀璨，阳光干净，在人间所有美好的存在里，不论是活着或者死去，我总是最爱你",
+    "这里风遇山止，船到岸停",
+    "他身后悬挂着漫天星河，眼睛里隐有笑意",
+    "未经允许，擅自特别喜欢你，不好意思了",
+    "所有苦难与背负的尽头，都是行云流水般的此世光阴",
+    "往前走，往前看，哪怕前途一片迷惘，哪怕只是凭着惯性继续往前走",
+    "阳光依然干净，星河依然灿烂，世界也依然在长久深情中缓缓地朝前走",
+    "深渊之下，红尘万丈",
+    "只要他还要我，我必定死生不负",
+    "我很好，除了很想你",
+    "想买束花给你，可路口的花店没开，我又实在想念",
+    "少年心动是仲夏夜的荒原，割不完烧不尽",
+    "长风一吹，野草就连了天",
+    "我喜欢你，所以希望你被簇拥包围，所以你走的路要繁花盛开，要人声鼎沸",
+    "台下的掌声热烈而经久，就像一场盛大的祝福",
+    "因为太喜欢你，所以我如临深渊、如履薄冰",
+    "被人拉起来，跟自己站起来是两码事",
+    "无人知晓他们在一起，但人人都曾见过他们在一起的样子",
+    "江添不再是哥哥，也不再是男朋友，兜来转去，又成了盛望不知该怎么称呼的人",
+    "我的骨骼说，我还是爱你",
+    "那一年，他喜欢的那个人在台上弹完一首歌，转身下台的时候，背上印着他的名字",
+    "台下的掌声热烈而经久，就像一场盛大的祝福",
+    "那个夏天的蝉鸣比哪一年都聒噪，教室窗外枝桠疯长，却总也挡不住烈阳",
 ]
 
-# 背景颜色 - 更多颜色选择
-colors = [
-    "#FFB6C1", "#98FB98", "#87CEEB", "#DDA0DD", "#FFD700",
-    "#FFA07A", "#20B2AA", "#DEB887", "#F0E68C", "#B0E0E6",
-    "#FF69B4", "#00FA9A", "#1E90FF", "#BA55D3", "#FFA500",
-    "#DC143C", "#00FF7F", "#4682B4", "#D8BFD8", "#F0FFF0"
+# 生成200条语录（重复基础语录但添加变化）
+def generate_200_tips():
+    tips = []
+    for i in range(200):
+        base_tip = random.choice(base_tips_list)
+        # 为重复的语录添加序号或轻微变化，使其看起来不同
+        if base_tip in tips:
+            variation = random.choice(["", "✨", "🌟", "💫", "❤️", "📚"])
+            tips.append(f"{base_tip} {variation}")
+        else:
+            tips.append(base_tip)
+    return tips
+
+# 扩展背景颜色
+base_color_list = [
+    "lightpink", "lightblue", "lightgreen", "lavender", 
+    "peachpuff", "palegoldenrod", "lightcyan", "lightyellow",
+    "thistle", "mistyrose", "powderblue", "navajowhite",
+    "lemonchiffon", "azure", "aliceblue", "honeydew"
 ]
 
-# 生成重叠的随机位置
-def generate_overlap_position():
-    # 创建一个重叠密集的区域
+# 生成200种颜色（重复基础颜色但添加轻微变化）
+def generate_200_colors():
+    colors = []
+    for i in range(200):
+        base_color = random.choice(base_color_list)
+        # 为重复的颜色添加轻微变化
+        if base_color in colors:
+            # 添加轻微的颜色变化
+            colors.append(base_color)
+        else:
+            colors.append(base_color)
+    return colors
+
+# 生成随机窗口位置
+def generate_random_position():
     screen_width = 1200
     screen_height = 700
-    card_width = 220
-    card_height = 110
+    window_width = 300  # 稍微缩小窗口以适应更多弹窗
+    window_height = 100
     
-    # 70%的卡片集中在中心区域，30%散落在边缘
-    if random.random() < 0.7:
-        # 中心密集区域
-        left = random.randint(200, screen_width - card_width - 200)
-        top = random.randint(150, screen_height - card_height - 150)
-    else:
-        # 边缘区域
-        left = random.randint(50, screen_width - card_width - 50)
-        top = random.randint(50, screen_height - card_height - 50)
+    left = random.randint(0, screen_width - window_width)
+    top = random.randint(0, screen_height - window_height)
     
-    # 随机旋转角度，增加重叠感
-    rotation = random.randint(-8, 8)
-    
-    return left, top, rotation
+    return left, top
 
-# 预生成所有卡片数据
-def generate_all_card_data():
-    card_data = []
-    for i in range(len(quotes)):
-        left, top, rotation = generate_overlap_position()
-        color = colors[i % len(colors)]
-        # 随机z-index，创建层次感
-        z_index = random.randint(1, 50)
-        
-        card_data.append({
-            'left': left,
-            'top': top,
-            'rotation': rotation,
-            'color': color,
-            'z_index': z_index,
-            'quote': quotes[i]
-        })
-    
-    return card_data
-
-# 主标题
-st.markdown("<h1 style='text-align: center; color: #1f77b4; margin-bottom: 20px;'>📚 全球高考 · 重叠弹窗效果</h1>", unsafe_allow_html=True)
-
-# 初始卡片
-if st.session_state.app_state == "initial":
-    st.markdown(
-        """
-        <div class='initial-card'>
-            全球高考<br>by 木苏里<br><br>
-            <span style='font-size: 16px;'>点击我开始重叠弹窗</span>
+# 创建单个弹窗的HTML
+def create_window_html(window_id, left, top, title, content, bg_color, is_initial=False):
+    if is_initial:
+        return f"""
+        <div class="initial-window" style="width: 350px; height: 120px; background-color: {bg_color};">
+            <div class="window-title">{title}</div>
+            <div class="window-content" style="font-size: 16px; font-family: '华文行楷';">
+                {content}
+            </div>
         </div>
-        """,
-        unsafe_allow_html=True
-    )
-    
-    # 使用按钮模拟卡片点击
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        if st.button("点击开始重叠效果", key="start_overlap", use_container_width=True):
-            st.session_state.app_state = "overlapping"
-            st.session_state.initial_removed = True
-            st.session_state.card_data = generate_all_card_data()
-            st.rerun()
+        """
+    else:
+        # 为批量弹窗添加延迟动画，避免同时出现造成卡顿
+        animation_delay = random.uniform(0, 2)  # 随机延迟0-2秒
+        return f"""
+        <div class="tk-window" style="left: {left}px; top: {top}px; width: 300px; height: 100px; background-color: {bg_color}; animation-delay: {animation_delay}s;">
+            <div class="window-title">{title}</div>
+            <div class="window-content" style="font-size: 10px; font-family: '微软雅黑';">
+                {content}
+            </div>
+        </div>
+        """
 
-# 卡片重叠弹出效果
-elif st.session_state.app_state == "overlapping":
-    # 初始卡片消失
-    if st.session_state.initial_removed:
+# 主程序逻辑
+def main():
+    # 初始窗口
+    if st.session_state.app_state == "initial":
+        # 创建初始窗口
+        st.markdown(
+            create_window_html(
+                "initial", 
+                0, 0,  # 位置由CSS控制
+                "专属提示", 
+                "全球高考<br>by 木苏里<br><br><span style='font-size: 12px;'>点击开始200个弹窗</span>", 
+                "skyblue", 
+                True
+            ),
+            unsafe_allow_html=True
+        )
+        
+        # 控制面板
         st.markdown(
             """
-            <div class='initial-card fade-out'>
-                全球高考<br>by 木苏里
+            <div class="control-panel">
+                <h4 style="margin:0; color:#333;">全球高考 · 200弹窗效果</h4>
+                <p style="margin:5px 0; color:#666; font-size:14px;">点击开始体验200个弹窗效果</p>
             </div>
             """,
             unsafe_allow_html=True
         )
-        st.session_state.initial_removed = False
-        # 短暂延迟后开始显示其他卡片
-        time.sleep(0.5)
+        
+        # 开始按钮
+        if st.button("开始200个弹窗", key="start_200", use_container_width=True):
+            st.session_state.app_state = "creating"
+            st.session_state.creation_started = True
+            st.rerun()
     
-    # 逐步显示卡片
-    if st.session_state.cards_popped < len(st.session_state.card_data):
-        # 每次显示一个卡片
-        st.session_state.cards_popped += 1
-        st.rerun()
-    
-    # 显示已弹出的卡片
-    for i in range(st.session_state.cards_popped):
-        if i < len(st.session_state.card_data):
-            card = st.session_state.card_data[i]
-            
+    # 创建弹窗中
+    elif st.session_state.app_state == "creating":
+        # 初始窗口关闭效果
+        if st.session_state.creation_started:
             st.markdown(
-                f"""
-                <div class='overlap-card' style='
-                    background-color: {card['color']}; 
-                    color: #333; 
-                    font-size: 14px; 
-                    left: {card['left']}px; 
-                    top: {card['top']}px;
-                    z-index: {card['z_index']};
-                    animation-delay: {i * 0.15}s;
-                    transform: rotate({card['rotation']}deg);
-                '>
-                    {card['quote']}
-                </div>
-                """,
+                '<div class="initial-window close-animation"></div>',
                 unsafe_allow_html=True
             )
+            st.session_state.creation_started = False
+            
+            # 生成200个弹窗数据
+            tips_list = generate_200_tips()
+            color_list = generate_200_colors()
+            
+            for i in range(200):
+                left, top = generate_random_position()
+                color = color_list[i]
+                tip = tips_list[i]
+                
+                st.session_state.windows.append({
+                    'id': i,
+                    'left': left,
+                    'top': top,
+                    'color': color,
+                    'tip': tip
+                })
+            
+            # 短暂延迟后切换到批量显示
+            time.sleep(0.5)
+            st.session_state.app_state = "batch"
+            st.rerun()
     
-    # 当所有卡片都显示后，切换到完成状态
-    if st.session_state.cards_popped >= len(st.session_state.card_data):
-        time.sleep(1)  # 等待最后一个卡片动画完成
-        st.session_state.app_state = "complete"
-        st.rerun()
-
-# 完成状态
-elif st.session_state.app_state == "complete":
-    st.balloons()
-    
-    # 显示所有卡片
-    for i, card in enumerate(st.session_state.card_data):
+    # 批量弹窗模式
+    elif st.session_state.app_state == "batch":
+        # 显示所有弹窗
+        for window in st.session_state.windows:
+            st.markdown(
+                create_window_html(
+                    window['id'],
+                    window['left'],
+                    window['top'],
+                    "温馨提示",
+                    window['tip'],
+                    window['color']
+                ),
+                unsafe_allow_html=True
+            )
+        
+        # 控制面板
         st.markdown(
             f"""
-            <div class='overlap-card' style='
-                background-color: {card['color']}; 
-                color: #333; 
-                font-size: 14px; 
-                left: {card['left']}px; 
-                top: {card['top']}px;
-                z-index: {card['z_index']};
-                opacity: 1;
-                animation: none;
-                transform: rotate({card['rotation']}deg);
-            '>
-                {card['quote']}
+            <div class="control-panel">
+                <h4 style="margin:0; color:#333;">200个弹窗已创建完成！</h4>
+                <p class="progress-info">共创建了 {len(st.session_state.windows)} 个弹窗</p>
+                <p style="margin:5px 0; color:#666; font-size:14px;">弹窗正在随机时间出现...</p>
             </div>
             """,
             unsafe_allow_html=True
         )
+        
+        # 控制按钮
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("关闭所有弹窗", use_container_width=True):
+                st.session_state.app_state = "closed"
+                st.rerun()
+        with col2:
+            if st.button("重新开始", use_container_width=True):
+                st.session_state.app_state = "initial"
+                st.session_state.windows = []
+                st.session_state.windows_created = 0
+                st.session_state.initial_closed = False
+                st.rerun()
     
-    # 控制面板
-    st.markdown(
-        """
-        <div class='control-panel'>
-            <h4 style='margin:0; color:#333;'>重叠弹窗效果完成！</h4>
-            <p style='margin:5px 0; color:#666; font-size:14px;'>鼠标悬停在卡片上查看效果</p>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-    
-    # 重新开始按钮
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        if st.button("重新开始重叠效果", use_container_width=True):
+    # 关闭状态
+    elif st.session_state.app_state == "closed":
+        st.success("所有200个弹窗已关闭！")
+        
+        if st.button("重新开始", use_container_width=True):
             st.session_state.app_state = "initial"
-            st.session_state.cards_popped = 0
-            st.session_state.card_data = []
-            st.session_state.initial_removed = False
+            st.session_state.windows = []
+            st.session_state.windows_created = 0
+            st.session_state.initial_closed = False
             st.rerun()
 
-# 页脚
-st.markdown("---")
-st.markdown(
-    "<div style='text-align: center; color: #666; margin-top: 30px;'>"
-    "基于《全球高考》by 木苏里 | 重叠交错弹窗效果"
-    "</div>",
-    unsafe_allow_html=True
-)
-
-# 添加一些说明
-if st.session_state.app_state == "overlapping":
-    st.info("✨ 卡片正在以重叠交错的方式弹出中...")
+if __name__ == "__main__":
+    main()
