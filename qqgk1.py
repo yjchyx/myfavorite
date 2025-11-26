@@ -55,7 +55,7 @@ st.markdown("""
         margin: 0px;
         opacity: 0;
         transform: scale(0.9);
-        animation: windowPop 0.3s ease-out forwards;
+        animation: windowPop 0.15s ease-out forwards;
         cursor: default;
         width: 350px;
         height: 120px;
@@ -88,7 +88,7 @@ st.markdown("""
         box-sizing: border-box;
         word-wrap: break-word;
         overflow: hidden;
-        font-size: 14px;  /* 增大字体 */
+        font-size: 14px;
         font-family: "微软雅黑", sans-serif;
         line-height: 1.4;
     }
@@ -113,7 +113,7 @@ st.markdown("""
         cursor: pointer;
     }
     
-    /* 弹窗出现动画 - 加快速度 */
+    /* 弹窗出现动画 - 极速 */
     @keyframes windowPop {
         0% {
             opacity: 0;
@@ -134,7 +134,7 @@ st.markdown("""
     }
     
     .initial-close {
-        animation: initialClose 0.3s ease-out forwards;
+        animation: initialClose 0.2s ease-out forwards;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -187,8 +187,8 @@ def create_window_html(window_id, left, top, title, content, bg_color, is_initia
         </div>
         """
     else:
-        # 加快速度：每个弹窗间隔0.2秒
-        animation_delay = window_id * 0.2
+        # 极速：每个弹窗间隔0.05秒
+        animation_delay = window_id * 0.05
         return f"""
         <div class="tk-window" style="left: {left}px; top: {top}px; background-color: {bg_color}; animation-delay: {animation_delay}s;">
             <div class="window-title">{title}</div>
@@ -228,9 +228,9 @@ def main():
             )
             st.session_state.initial_closed = False
             
-            # 生成弹窗数据
+            # 生成450个弹窗数据
             st.session_state.windows = []
-            for i in range(500):
+            for i in range(450):  # 减少到450个
                 left, top = generate_random_position()
                 color = random.choice(color_list)
                 tip = random.choice(tips_list)
@@ -238,7 +238,7 @@ def main():
                     'id': i, 'left': left, 'top': top, 'color': color, 'tip': tip
                 })
             
-            time.sleep(0.3)
+            time.sleep(0.2)
             st.session_state.app_state = "batch"
             st.rerun()
     
