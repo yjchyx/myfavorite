@@ -20,11 +20,14 @@ st.markdown("""
     .stApp {
         background: #f0f2f6;
         overflow: hidden;
+        width: 100vw;
+        height: 100vh;
     }
     /* 隐藏所有Streamlit组件容器 */
     .main .block-container {
         padding-top: 0rem;
         padding-bottom: 0rem;
+        max-width: 100%;
     }
     /* 隐藏其他可能出现的元素 */
     .stAlert {
@@ -165,14 +168,19 @@ color_list = [
     "lavender", "peachpuff", "palegoldenrod"
 ]
 
-# 生成随机窗口位置
+# 生成随机窗口位置 - 确保铺满整个页面
 def generate_random_position():
-    screen_width = 1600
-    screen_height = 1000
+    # 获取实际屏幕尺寸（考虑滚动条）
+    screen_width = 1920  # 更大的虚拟屏幕
+    screen_height = 1080
+    
     window_width = 350
     window_height = 120
-    left = random.randint(0, screen_width - window_width)
-    top = random.randint(0, screen_height - window_height)
+    
+    # 确保覆盖所有区域，包括边缘
+    left = random.randint(-50, screen_width - window_width + 50)  # 允许部分超出屏幕
+    top = random.randint(-50, screen_height - window_height + 50)
+    
     return left, top
 
 # 创建弹窗HTML
@@ -228,10 +236,30 @@ def main():
             )
             st.session_state.initial_closed = False
             
-            # 生成450个弹窗数据
+            # 生成450个弹窗数据 - 使用更均匀的分布
             st.session_state.windows = []
-            for i in range(450):  # 减少到450个
-                left, top = generate_random_position()
+            
+            # 创建网格基础位置，确保覆盖全屏
+            grid_cols = 6  # 横向6列
+            grid_rows = 4  # 纵向4行
+            positions_per_cell = 450 // (grid_cols * grid_rows)  # 每个网格区域的弹窗数量
+            
+            for i in range(450):
+                # 混合使用网格分布和随机分布，确保全覆盖
+                if i % 3 == 0:  # 每3个弹窗中有1个使用网格分布
+                    col = (i // positions_per_cell) % grid_cols
+                    row = (i // positions_per_cell) // grid_cols
+                    
+                    cell_width = 1920 // grid_cols
+                    cell_height = 1080 // grid_rows
+                    
+                    left = col * cell_width + random.randint(0, cell_width - 350)
+                    top = row * cell_height + random.randint(0, cell_height - 120)
+                else:
+                    # 其他弹窗使用随机分布（允许超出边界）
+                    left = random.randint(-100, 1920 - 250)
+                    top = random.randint(-100, 1080 - 20)
+                
                 color = random.choice(color_list)
                 tip = random.choice(tips_list)
                 st.session_state.windows.append({
